@@ -112,3 +112,43 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
 .recharts-wrapper tspan {
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
 }
+
+/* No horizontal scroll due to fixed chart widths */
+html, body { overflow-x: hidden; }
+
+/* Recharts on dark theme */
+.recharts-wrapper text,
+.recharts-wrapper tspan {
+  fill: var(--fg) !important;
+  opacity: 0.85;
+}
+
+.recharts-default-tooltip {
+  background: var(--panel) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: var(--fg) !important;
+  border-radius: 10px !important;
+}
+
+/* Inputs readable in dark */
+input::placeholder { color: var(--muted); opacity: 0.65; }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { appearance: none; margin: 0; }
+/* Make container vertical and responsive */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Remove old grid layout */
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Make cards stretch nicely */
+.card {
+  width: 100%;
+}

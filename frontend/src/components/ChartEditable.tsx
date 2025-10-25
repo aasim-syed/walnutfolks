@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import {
+  ResponsiveContainer,
+  LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend
+} from "recharts";
 
 type Point = { name: string; value: number };
 const defaultData: Point[] = [
@@ -42,16 +45,42 @@ export default function ChartEditable({ email }: { email: string }) {
     alert("Saved!");
   };
 
+  const updateValue = (i: number, val: number) => {
+    const next = Math.max(0, Number.isFinite(val) ? val : 0); // clamp ≥ 0
+    const copy = [...pending];
+    copy[i] = { ...copy[i], value: next };
+    setPending(copy);
+  };
+
   return (
     <div>
-      <LineChart width={700} height={320} data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Line type="monotone" dataKey="value" />
-      </LineChart>
+      <div style={{ width: "100%", height: 320 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+            <CartesianGrid stroke="rgba(255,255,255,0.12)" strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fill: "var(--muted)" }} />
+            <YAxis tick={{ fill: "var(--muted)" }} />
+            <Tooltip
+              contentStyle={{
+                background: "var(--panel)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                color: "var(--fg)",
+              }}
+              labelStyle={{ color: "var(--fg)" }}
+              itemStyle={{ color: "var(--fg)" }}
+            />
+            <Legend wrapperStyle={{ color: "var(--muted)" }} />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="var(--accent-2)"
+              strokeWidth={2}
+              dot={{ r: 3, stroke: "var(--accent-2)" }}
+              activeDot={{ r: 5 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
       <div className="controls">
         {pending.map((p, i) => (
@@ -59,12 +88,10 @@ export default function ChartEditable({ email }: { email: string }) {
             <label>{p.name}</label>
             <input
               type="number"
+              min={0}
+              step={1}
               value={p.value}
-              onChange={(e) => {
-                const copy = [...pending];
-                copy[i] = { ...copy[i], value: Number(e.target.value) };
-                setPending(copy);
-              }}
+              onChange={(e) => updateValue(i, Number(e.target.value))}
             />
           </div>
         ))}
