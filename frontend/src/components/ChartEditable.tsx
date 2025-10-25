@@ -18,7 +18,7 @@ export default function ChartEditable({ email }: { email: string }) {
 
   useEffect(() => {
     (async () => {
-      const { data: row } = await supabase
+      const { data: row } = await (supabase as any)
         .from("analytics")
         .select("data")
         .eq("email", email)
@@ -36,15 +36,14 @@ export default function ChartEditable({ email }: { email: string }) {
       const ok = confirm("We found previous values. Overwrite?");
       if (!ok) return;
     }
-    await supabase.from("analytics").upsert({ email, data: pending });
+    await (supabase as any).from("analytics").upsert({ email, data: pending });
     setData(pending);
     setPrev(pending);
     alert("Saved!");
   };
 
   return (
-    <div className="card">
-      <h3>Editable: Daily Successful Calls</h3>
+    <div>
       <LineChart width={700} height={320} data={data}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" />
@@ -54,9 +53,9 @@ export default function ChartEditable({ email }: { email: string }) {
         <Line type="monotone" dataKey="value" />
       </LineChart>
 
-      <div className="editor">
+      <div className="controls">
         {pending.map((p, i) => (
-          <div key={i} className="row">
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <label>{p.name}</label>
             <input
               type="number"
@@ -69,7 +68,11 @@ export default function ChartEditable({ email }: { email: string }) {
             />
           </div>
         ))}
+      </div>
+
+      <div className="controls" style={{ marginTop: 10 }}>
         <button onClick={overwrite}>Save Values</button>
+        <span className="kbd">Enter</span> to submit
       </div>
     </div>
   );
