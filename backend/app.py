@@ -1,21 +1,27 @@
+# backend/app.py
 import asyncio
 from datetime import datetime, timezone
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from .db import Base, engine, get_session
-from .models import Transaction, TxStatus
-from .schemas import WebhookIn, TxOut
 from fastapi.middleware.cors import CORSMiddleware
 
+# 🔧 absolute (package) imports — no leading dots
+from backend.db import Base, engine, get_session
+from backend.models import Transaction, TxStatus
+from backend.schemas import WebhookIn, TxOut
 
-app = FastAPI(title='Transactions Service')
+app = FastAPI(title="Transactions Service")
 
-# Allow your Vite dev server to call the API
+# CORS: local dev + your Vercel frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://walnutfolks.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,15 +32,10 @@ Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def health():
-    return {
-        "status": "HEALTHY",
-        "current_time": datetime.now(timezone.utc).isoformat()
-    }
+    return {"status": "HEALTHY", "current_time": datetime.now(timezone.utc).isoformat()}
 
 async def process_transaction(tx_id: str):
-    # Simulate external downstream processing (30s)
     await asyncio.sleep(30)
-    # Mark PROCESSED with processed_at timestamp
     with get_session() as db:
         tx = db.execute(select(Transaction).where(Transaction.transaction_id == tx_id)).scalar_one_or_none()
         if not tx:
@@ -46,7 +47,6 @@ async def process_transaction(tx_id: str):
 @app.post("/v1/webhooks/transactions", status_code=202)
 async def webhook(payload: WebhookIn, bg: BackgroundTasks):
     with get_session() as db:
-        # Try create in PROCESSING state (idempotent via unique constraint)
         tx = Transaction(
             transaction_id=payload.transaction_id,
             source_account=payload.source_account,
@@ -60,10 +60,7 @@ async def webhook(payload: WebhookIn, bg: BackgroundTasks):
             db.commit()
         except IntegrityError:
             db.rollback()
-            # Already exists — acknowledge without re-enqueue
             return JSONResponse(status_code=202, content={"ack": True})
-
-    # Enqueue background task after commit
     bg.add_task(process_transaction, payload.transaction_id)
     return {"ack": True}
 
