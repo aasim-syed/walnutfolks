@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Integer, Float, DateTime, Enum, UniqueConstraint
 from sqlalchemy.sql import func
 from enum import Enum as PyEnum
-from .db import Base
+from backend.db import Base
 
 class TxStatus(str, PyEnum):
     PROCESSING = "PROCESSING"
