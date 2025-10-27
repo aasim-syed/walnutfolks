@@ -1,7 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
 const defaultData = [
     { name: "Mon", value: 12 },
     { name: "Tue", value: 18 },
@@ -38,9 +38,15 @@ export default function ChartEditable({ email }) {
         setPrev(pending);
         alert("Saved!");
     };
-    return (_jsxs("div", { children: [_jsxs(LineChart, { width: 700, height: 320, data: data, children: [_jsx(CartesianGrid, { strokeDasharray: "3 3" }), _jsx(XAxis, { dataKey: "name" }), _jsx(YAxis, {}), _jsx(Tooltip, {}), _jsx(Legend, {}), _jsx(Line, { type: "monotone", dataKey: "value" })] }), _jsx("div", { className: "controls", children: pending.map((p, i) => (_jsxs("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [_jsx("label", { children: p.name }), _jsx("input", { type: "number", value: p.value, onChange: (e) => {
-                                const copy = [...pending];
-                                copy[i] = { ...copy[i], value: Number(e.target.value) };
-                                setPending(copy);
-                            } })] }, i))) }), _jsxs("div", { className: "controls", style: { marginTop: 10 }, children: [_jsx("button", { onClick: overwrite, children: "Save Values" }), _jsx("span", { className: "kbd", children: "Enter" }), " to submit"] })] }));
+    const updateValue = (i, val) => {
+        const next = Math.max(0, Number.isFinite(val) ? val : 0); // clamp ≥ 0
+        const copy = [...pending];
+        copy[i] = { ...copy[i], value: next };
+        setPending(copy);
+    };
+    return (_jsxs("div", { children: [_jsx("div", { style: { width: "100%", height: 320 }, children: _jsx(ResponsiveContainer, { width: "100%", height: "100%", children: _jsxs(LineChart, { data: data, margin: { top: 10, right: 12, left: 0, bottom: 0 }, children: [_jsx(CartesianGrid, { stroke: "rgba(255,255,255,0.12)", strokeDasharray: "3 3" }), _jsx(XAxis, { dataKey: "name", tick: { fill: "var(--muted)" } }), _jsx(YAxis, { tick: { fill: "var(--muted)" } }), _jsx(Tooltip, { contentStyle: {
+                                    background: "var(--panel)",
+                                    border: "1px solid rgba(255,255,255,0.08)",
+                                    color: "var(--fg)",
+                                }, labelStyle: { color: "var(--fg)" }, itemStyle: { color: "var(--fg)" } }), _jsx(Legend, { wrapperStyle: { color: "var(--muted)" } }), _jsx(Line, { type: "monotone", dataKey: "value", stroke: "var(--accent-2)", strokeWidth: 2, dot: { r: 3, stroke: "var(--accent-2)" }, activeDot: { r: 5 } })] }) }) }), _jsx("div", { className: "controls", children: pending.map((p, i) => (_jsxs("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [_jsx("label", { children: p.name }), _jsx("input", { type: "number", min: 0, step: 1, value: p.value, onChange: (e) => updateValue(i, Number(e.target.value)) })] }, i))) }), _jsxs("div", { className: "controls", style: { marginTop: 10 }, children: [_jsx("button", { onClick: overwrite, children: "Save Values" }), _jsx("span", { className: "kbd", children: "Enter" }), " to submit"] })] }));
 }
